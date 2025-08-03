@@ -39,9 +39,10 @@ type SignUpData = z.infer<typeof signUpSchema>;
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, resendConfirmation } = useAuth();
   const [activeTab, setActiveTab] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'signin');
   const [loading, setLoading] = useState(false);
+  const [emailForConfirmation, setEmailForConfirmation] = useState<string | null>(null);
 
   const signInForm = useForm<SignInData>({
     resolver: zodResolver(signInSchema),
@@ -71,7 +72,7 @@ const Auth = () => {
   const handleSignUp = async (data: SignUpData) => {
     setLoading(true);
     try {
-      await signUp(data.email, data.password, {
+      const result = await signUp(data.email, data.password, {
         first_name: data.firstName,
         last_name: data.lastName,
         role: data.role,
@@ -79,10 +80,22 @@ const Auth = () => {
         job_title: data.jobTitle,
         display_name: `${data.firstName} ${data.lastName}`,
       });
+      
+      // If signup successful but no session (email confirmation required), 
+      // store email for potential resend
+      if (result?.data?.user && !result?.data?.session) {
+        setEmailForConfirmation(data.email);
+      }
     } catch (error) {
       // Error handled in useAuth hook
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = () => {
+    if (emailForConfirmation) {
+      resendConfirmation(emailForConfirmation);
     }
   };
 
@@ -291,6 +304,22 @@ const Auth = () => {
                   >
                     {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
+                  
+                  {emailForConfirmation && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg text-center">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Didn't receive the confirmation email?
+                      </p>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleResendConfirmation}
+                      >
+                        Resend Confirmation Email
+                      </Button>
+                    </div>
+                  )}
                 </form>
               </TabsContent>
             </Tabs>

@@ -42,21 +42,31 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string, metadata: any = {}) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: metadata,
         },
       });
 
       if (error) throw error;
       
-      toast({
-        title: "Account created successfully",
-        description: "Please check your email to confirm your account.",
-      });
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        toast({
+          title: "Account created successfully",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+      } else if (data.session) {
+        toast({
+          title: "Account created successfully",
+          description: "You are now signed in!",
+        });
+      }
+      
+      return { data, error: null };
     } catch (error: any) {
       toast({
         title: "Sign up failed",
@@ -64,6 +74,31 @@ export const useAuth = () => {
         variant: "destructive",
       });
       throw error;
+    }
+  };
+
+  const resendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your email for the confirmation link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to send confirmation email",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -113,5 +148,6 @@ export const useAuth = () => {
     signUp,
     signIn,
     signOut,
+    resendConfirmation,
   };
 };
