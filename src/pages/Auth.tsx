@@ -101,34 +101,36 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-secondary flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-scale-in">
         <div className="mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="mb-4"
+            className="mb-4 hover:bg-background/10"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
         </div>
 
-        <Card className="glass shadow-candor-xl">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-white">C</span>
+        <Card className="glass shadow-candor-xl border-0">
+          <CardHeader className="text-center space-y-6">
+            <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-candor-lg">
+              <span className="text-3xl font-bold text-white">C</span>
             </div>
-            <CardTitle className="text-2xl">Welcome to Candor</CardTitle>
-            <CardDescription>
-              Access your dashboard or create a new account
-            </CardDescription>
+            <div className="space-y-2">
+              <CardTitle className="text-3xl font-bold">Welcome to Candor</CardTitle>
+              <CardDescription className="text-base">
+                Access your dashboard or create a new account
+              </CardDescription>
+            </div>
           </CardHeader>
           
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/30">
+                <TabsTrigger value="signin" className="text-sm font-medium">Sign In</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm font-medium">Sign Up</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4">
@@ -165,7 +167,9 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-primary hover:bg-primary-hover"
+                    size="lg"
+                    variant="gradient"
+                    className="w-full shadow-candor-md"
                     disabled={loading}
                   >
                     {loading ? 'Signing In...' : 'Sign In'}
@@ -299,7 +303,9 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-primary hover:bg-primary-hover"
+                    size="lg"
+                    variant="gradient"
+                    className="w-full shadow-candor-md"
                     disabled={loading}
                   >
                     {loading ? 'Creating Account...' : 'Create Account'}
