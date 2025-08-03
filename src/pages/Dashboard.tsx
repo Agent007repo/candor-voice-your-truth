@@ -15,7 +15,8 @@ import {
   LogOut, 
   BarChart3,
   Users,
-  MessageSquare
+  MessageSquare,
+  Search
 } from 'lucide-react';
 import { Issue } from '@/types/database';
 
@@ -119,7 +120,7 @@ const Dashboard = () => {
                 <p className="opacity-90">Welcome back, {user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Button 
                 variant="outline" 
                 className="border-white text-white hover:bg-white hover:text-primary"
@@ -127,6 +128,21 @@ const Dashboard = () => {
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Report Issue
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white text-white hover:bg-white hover:text-primary"
+                onClick={() => navigate('/track')}
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Track Issue
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white text-white hover:bg-white hover:text-primary"
+                onClick={() => navigate('/profile')}
+              >
+                Profile
               </Button>
               <Button 
                 variant="outline" 
