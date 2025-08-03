@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          issue_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issue_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issue_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_tokens_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buildings: {
         Row: {
           address: string
@@ -156,6 +188,27 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           enrolled_at: string
@@ -264,19 +317,180 @@ export type Database = {
           },
         ]
       }
+      issue_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      issue_updates: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_public: boolean | null
+          issue_id: string
+          new_status: string | null
+          old_status: string | null
+          update_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean | null
+          issue_id: string
+          new_status?: string | null
+          old_status?: string | null
+          update_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean | null
+          issue_id?: string
+          new_status?: string | null
+          old_status?: string | null
+          update_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issue_updates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "issue_updates_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issues: {
+        Row: {
+          anonymous_token: string
+          assigned_to: string | null
+          attachments: Json | null
+          category_id: string | null
+          created_at: string
+          department_id: string | null
+          description: string
+          id: string
+          location: string | null
+          metadata: Json | null
+          reporter_id: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          anonymous_token: string
+          assigned_to?: string | null
+          attachments?: Json | null
+          category_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          description: string
+          id?: string
+          location?: string | null
+          metadata?: Json | null
+          reporter_id?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          anonymous_token?: string
+          assigned_to?: string | null
+          attachments?: Json | null
+          category_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          description?: string
+          id?: string
+          location?: string | null
+          metadata?: Json | null
+          reporter_id?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issues_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "issues_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "issue_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          company: string | null
           created_at: string
           department: string | null
+          department_id: string | null
           display_name: string | null
           email: string
           employee_id: string | null
           first_name: string | null
           graduation_year: number | null
           id: string
+          job_title: string | null
           last_name: string | null
           major: string | null
+          manager_id: string | null
           phone: string | null
           role: string
           student_id: string | null
@@ -285,16 +499,20 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          company?: string | null
           created_at?: string
           department?: string | null
+          department_id?: string | null
           display_name?: string | null
           email: string
           employee_id?: string | null
           first_name?: string | null
           graduation_year?: number | null
           id?: string
+          job_title?: string | null
           last_name?: string | null
           major?: string | null
+          manager_id?: string | null
           phone?: string | null
           role: string
           student_id?: string | null
@@ -303,30 +521,52 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          company?: string | null
           created_at?: string
           department?: string | null
+          department_id?: string | null
           display_name?: string | null
           email?: string
           employee_id?: string | null
           first_name?: string | null
           graduation_year?: number | null
           id?: string
+          job_title?: string | null
           last_name?: string | null
           major?: string | null
+          manager_id?: string | null
           phone?: string | null
           role?: string
           student_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_anonymous_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
