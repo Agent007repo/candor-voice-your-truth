@@ -1,52 +1,67 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Mail, Building, Briefcase, Save, Shield } from "lucide-react";
-import { Profile as ProfileType } from "@/types/database";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { MainLayout } from '@/components/layout/main-layout';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Phone, 
+  Building, 
+  Briefcase, 
+  Shield, 
+  Bell, 
+  Eye, 
+  Download,
+  Trash2,
+  Save,
+  Camera
+} from 'lucide-react';
+import type { Profile } from '@/types/database';
 
-const profileSchema = z.object({
-  display_name: z.string().min(1, "Display name is required"),
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  phone: z.string().optional(),
-  job_title: z.string().optional(),
-  company: z.string().optional(),
-  department: z.string().optional(),
-});
-
-type ProfileData = z.infer<typeof profileSchema>;
-
-const Profile = () => {
+const ProfilePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<ProfileType | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
 
-  const form = useForm<ProfileData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      display_name: "",
-      first_name: "",
-      last_name: "",
-      phone: "",
-      job_title: "",
-      company: "",
-      department: "",
-    },
+  // Form data
+  const [formData, setFormData] = useState({
+    display_name: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    company: '',
+    job_title: '',
+    department: '',
   });
+
+  // Notification preferences
+  const [notifications, setNotifications] = useState({
+    email_updates: true,
+    issue_status_changes: true,
+    weekly_reports: false,
+    marketing: false,
+  });
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -55,115 +70,169 @@ const Profile = () => {
   }, [user]);
 
   const fetchProfile = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
 
       if (data) {
-        setProfile(data as unknown as ProfileType);
-        form.reset({
-          display_name: data.display_name || "",
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          phone: data.phone || "",
-          job_title: data.job_title || "",
-          company: data.company || "",
-          department: data.department || "",
+        setProfile(data);
+        setFormData({
+          display_name: data.display_name || '',
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          phone: data.phone || '',
+          company: data.company || '',
+          job_title: data.job_title || '',
+          department: data.department || '',
+        });
+      } else {
+        // Create profile if it doesn't exist
+        const newProfile = {
+          user_id: user.id,
+          email: user.email!,
+          role: user.user_metadata?.role || 'employee',
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || '',
+          first_name: user.user_metadata?.first_name || '',
+          last_name: user.user_metadata?.last_name || '',
+          company: user.user_metadata?.company || '',
+          job_title: user.user_metadata?.job_title || '',
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        setProfile(createdProfile);
+        setFormData({
+          display_name: createdProfile.display_name || '',
+          first_name: createdProfile.first_name || '',
+          last_name: createdProfile.last_name || '',
+          phone: createdProfile.phone || '',
+          company: createdProfile.company || '',
+          job_title: createdProfile.job_title || '',
+          department: createdProfile.department || '',
         });
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const handleSubmit = async (data: ProfileData) => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: data.display_name,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone || null,
-          job_title: data.job_title || null,
-          company: data.company || null,
-          department: data.department || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile updated successfully",
-        description: "Your profile information has been saved.",
-      });
-
-      // Refresh profile data
-      await fetchProfile();
     } catch (error: any) {
       toast({
-        title: "Failed to update profile",
-        description: error.message || "Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load profile',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin': return 'destructive';
-      case 'hr': return 'default';
-      case 'manager': return 'secondary';
-      case 'employee': return 'outline';
-      case 'faculty': return 'default';
-      case 'staff': return 'secondary';
-      default: return 'outline';
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, ...formData } : null);
+      
+      toast({
+        title: 'Success',
+        description: 'Profile updated successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (initialLoading) {
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Note: In a real app, you'd want to call an edge function to properly delete the user
+      // For now, we'll just sign them out
+      await signOut();
+      toast({
+        title: 'Account Deletion',
+        description: 'Please contact support to complete account deletion.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete account',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
-        <div className="mx-auto max-w-4xl">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-muted rounded"></div>
-            <div className="h-96 bg-muted rounded"></div>
-          </div>
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" />
         </div>
-      </div>
+      </MainLayout>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <MainLayout>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Profile not found</p>
+        </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <MainLayout>
+      <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => navigate("/dashboard")}
-            className="gap-2"
+            onClick={() => navigate('/dashboard')}
+            className="hover:bg-muted/50"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
+        </div>
+
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account information and preferences.
+          </p>
         </div>
 
         {/* Profile Information */}
@@ -389,8 +458,8 @@ const Profile = () => {
           </div>
         )}
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
-export default Profile;
+export default ProfilePage;

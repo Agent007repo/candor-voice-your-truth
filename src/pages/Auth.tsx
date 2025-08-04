@@ -101,7 +101,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-secondary flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-scale-in">
+      <div className="w-full max-w-md animate-fade-in">
         <div className="mb-6">
           <Button
             variant="ghost"
