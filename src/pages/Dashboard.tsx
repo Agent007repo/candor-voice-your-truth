@@ -45,7 +45,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { issues, loading, categories, refetchIssues } = useIssues();
+  const { issues, loading, categories, refetch } = useIssues();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');

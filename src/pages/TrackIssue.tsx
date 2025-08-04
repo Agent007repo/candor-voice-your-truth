@@ -43,7 +43,13 @@ const TrackIssue = () => {
     try {
       const trackedIssue = await trackIssueByToken(token);
       if (trackedIssue) {
-        setIssue(trackedIssue);
+        setIssue({
+          ...trackedIssue,
+          severity: trackedIssue.severity as 'low' | 'medium' | 'high' | 'critical',
+          status: trackedIssue.status as 'open' | 'in_progress' | 'resolved' | 'closed',
+          attachments: Array.isArray(trackedIssue.attachments) ? trackedIssue.attachments : [],
+          metadata: typeof trackedIssue.metadata === 'object' ? trackedIssue.metadata as Record<string, any> : {}
+        });
       } else {
         setError('Issue not found. Please check your tracking token.');
       }
